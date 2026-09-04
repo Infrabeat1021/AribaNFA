@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}NFA Generator{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="bar">
+    <a class="brand" href="{{ url_for('index') }}"><span class="b1">Infra</span><span class="b2">Beat</span> · NFA Generator</a>
+    <nav>
+      <span class="status {{ 'ok' if connected else 'warn' }}">
+        {{ 'Connected to ' ~ cfg.realm if connected else 'Not connected' }}
+      </span>
+      <a href="{{ url_for('settings') }}">Settings</a>
+    </nav>
+  </header>
+
+  <main>
+    {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="foot">
+    Runs locally on this machine. Documents are written to
+    <code>{{ cfg.output_dir }}</code>.
+  </footer>
+</body>
+</html>

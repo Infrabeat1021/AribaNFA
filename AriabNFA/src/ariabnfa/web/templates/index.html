@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Generate an NFA</h1>
+<p class="lede">
+  Fetch a sourcing event from Ariba, check the details, write the justification,
+  and download the Word document.
+</p>
+
+<form method="post" action="{{ url_for('fetch') }}" class="card">
+  <div class="field">
+    <label for="event_id">Ariba event ID</label>
+    <input id="event_id" name="event_id" autofocus placeholder="Doc89045043"
+           autocomplete="off">
+    <p class="hint">In offline mode, use <code>sample</code>, <code>sparse</code>,
+      <code>multiline</code> or <code>awarded</code>.</p>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label for="entity">Letterhead</label>
+      <select id="entity" name="entity">
+        {% for name in entities %}<option value="{{ name }}">{{ name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="api_env">Environment</label>
+      <select id="api_env" name="api_env">
+        <option value="prod" {{ 'selected' if cfg.api_env == 'prod' }}>prod</option>
+        <option value="sandbox" {{ 'selected' if cfg.api_env == 'sandbox' }}>sandbox</option>
+      </select>
+    </div>
+  </div>
+
+  <label class="check">
+    <input type="checkbox" name="offline" {{ 'checked' if not connected }}>
+    Offline — use built-in sample data
+  </label>
+
+  <div class="actions">
+    <button class="primary" type="submit">Fetch event</button>
+    <button type="submit" formaction="{{ url_for('dump') }}" class="ghost">
+      Dump raw JSON
+    </button>
+  </div>
+  <p class="hint">Fetching contacts Ariba and can take several seconds.</p>
+</form>
+
+{% endblock %}

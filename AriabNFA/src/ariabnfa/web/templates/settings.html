@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+
+<h1>Settings</h1>
+
+{% if saved %}<div class="done"><div>{{ saved }}</div></div>{% endif %}
+{% if tested %}<div class="notes"><p class="mono">{{ tested }}</p></div>{% endif %}
+
+<form method="post" action="{{ url_for('save_settings') }}">
+
+  <section class="card">
+    <h2>Ariba connection</h2>
+    <p class="hint">
+      Enter hosts and the service path only — not a full endpoint URL. The OAuth
+      host is data-centre specific; a wrong host looks exactly like a wrong password.
+    </p>
+    <div class="row">
+      <div class="field"><label>Realm</label>
+        <input name="realm" value="{{ cfg.realm }}"></div>
+      <div class="field"><label>Environment</label>
+        <select name="api_env">
+          <option value="prod" {{ 'selected' if cfg.api_env == 'prod' }}>prod</option>
+          <option value="sandbox" {{ 'selected' if cfg.api_env == 'sandbox' }}>sandbox</option>
+        </select></div>
+    </div>
+    <div class="field"><label>OAuth host</label>
+      <input name="oauth_base" value="{{ cfg.oauth_base }}"></div>
+    <div class="field"><label>API host</label>
+      <input name="api_base" value="{{ cfg.api_base }}"></div>
+    <div class="field"><label>Event API path</label>
+      <input name="event_api_path" value="{{ cfg.event_api_path }}"></div>
+    <div class="row">
+      <div class="field"><label>Integration user</label>
+        <input name="api_user" value="{{ cfg.api_user }}">
+        <p class="hint">Required — Ariba answers 400 without it.</p></div>
+      <div class="field"><label>Password adapter</label>
+        <input name="password_adapter" value="{{ cfg.password_adapter }}"></div>
+    </div>
+    <p class="hint mono">
+      Will call: {{ cfg.api_base }}{{ cfg.event_api_path }}/{{ cfg.api_env }}/events/{id}?realm={{ cfg.realm or '…' }}&amp;user={{ cfg.api_user or '…' }}
+    </p>
+  </section>
+
+  <section class="card">
+    <h2>Credentials</h2>
+    <p class="hint">
+      From the SAP Ariba Developer Portal. Stored in Windows Credential Manager,
+      never in the config file. Enter the Client ID and Secret — they are encoded
+      for you; the Base64 box is only for when the portal gave you nothing else.
+    </p>
+    <div class="field"><label>Application key (API key)</label>
+      <input type="password" name="api_key" value="{{ api_key }}"></div>
+    <div class="row">
+      <div class="field"><label>OAuth Client ID</label>
+        <input type="password" name="client_id" value="{{ client_id }}"></div>
+      <div class="field"><label>OAuth Client Secret</label>
+        <input type="password" name="client_secret" value="{{ client_secret }}"></div>
+    </div>
+    <div class="field"><label>Base64 credential (fallback)</label>
+      <input type="password" name="basic" value="{{ basic }}"></div>
+  </section>
+
+  <section class="card">
+    <h2>Commercial and output</h2>
+    <div class="row">
+      <div class="field"><label>GST rate (%)</label>
+        <input name="gst_rate" value="{{ cfg.gst_rate }}"></div>
+      <div class="field"><label>Save documents to</label>
+        <input name="output_dir" value="{{ cfg.output_dir }}"></div>
+    </div>
+    <div class="field">
+      <label>Shared field mapping (optional)</label>
+      <input name="mapping_file" value="{{ cfg.mapping_file }}"
+             placeholder="D:\OneDrive - infrabeat.com\...\nfa_mapping.json">
+      <p class="hint">
+        Point every install at one file on a shared drive and a mapping fix
+        reaches the whole team — the main thing a central server would buy you.
+        Leave blank to use the copy inside this folder.
+        {% if cfg.mapping_file %}
+          Currently reading:
+          <span class="mono">{{ cfg.mapping_path }}</span>
+          {% if not cfg.mapping_is_shared %}
+            <strong>— the shared file is unreachable, so the local copy is in use.</strong>
+          {% endif %}
+        {% endif %}
+      </p>
+    </div>
+    <label class="check">
+      <input type="checkbox" name="gst_inclusive" {{ 'checked' if cfg.gst_inclusive }}>
+      Ariba quotes already include GST
+    </label>
+    <p class="hint">
+      If this is set wrongly every comparison row is misstated while still looking
+      plausible. Confirm it against an event whose real figures you know.
+    </p>
+  </section>
+
+  <div class="actions sticky">
+    <button class="ghost" type="submit" name="action" value="test">Test connection</button>
+    <button class="primary" type="submit" name="action" value="save">Save settings</button>
+  </div>
+</form>
+
+{% endblock %}

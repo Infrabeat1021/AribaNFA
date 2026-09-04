@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Review — {{ data.event_id }}{% endblock %}
+{% block content %}
+
+<h1>{{ data.subject or data.event_id }}</h1>
+<p class="lede">
+  Event <code>{{ data.event_id }}</code> ·
+  {{ data.line_items | length }} line item(s) ·
+  {{ data.vendors | length }} ranked vendor(s)
+</p>
+
+{% if document %}
+  <div class="done">
+    <div>
+      <strong>Document ready.</strong>
+      <div class="mono">{{ document.name }}</div>
+    </div>
+    <a class="primary button" href="{{ url_for('download', token=token) }}">Download</a>
+  </div>
+{% endif %}
+
+{% if data.report.notes %}
+  <div class="notes">
+    {% for note in data.report.notes %}<p>{{ note }}</p>{% endfor %}
+  </div>
+{% endif %}
+
+<form method="post" action="{{ url_for('generate', token=token) }}">
+  <input type="hidden" name="entity" value="{{ data.entity.name }}">
+
+  <section class="card">
+    <h2>Subject</h2>
+    <textarea name="subject" rows="2">{{ data.subject }}</textarea>
+  </section>
+
+  <section class="card">
+    <h2>Event details</h2>
+    <p class="hint">
+      Highlighted fields were not supplied by Ariba and need your input.
+      Rows marked <em>auto</em> are filled from the vendor list below.
+    </p>
+    <div class="grid">
+      {% for row in rows %}
+        <label class="gridrow {{ 'missing' if row.missing }}">
+          <span class="key">{{ row.letter }}</span>
+          <span class="name">
+            {{ row.label }}
+            {% if row.derived %}<em class="auto">auto</em>{% endif %}
+          </span>
+          {% if row.multiline %}
+            <textarea name="grid__{{ row.key }}" rows="4">{{ row.value }}</textarea>
+          {% else %}
+            <input name="grid__{{ row.key }}" value="{{ row.value }}">
+          {% endif %}
+        </label>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Vendors</h2>
+    <p class="hint">
+      Untick a vendor that did not submit an offer. Enter the basic (pre-GST)
+      value; GST, totals and L1/L2/L3 ranking are calculated on generate.
+    </p>
+    <table class="vendors">
+      <thead>
+        <tr>
+          <th>Submitted</th><th>Vendor</th><th>Basic value (INR)</th>
+          <th>Rank</th><th>Total incl. GST</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in vendors %}
+        <tr>
+          <td class="mid">
+            <input type="checkbox" name="vendor_submitted" value="{{ loop.index0 }}"
+                   {{ 'checked' if v.responded }}>
+          </td>
+          <td>
+            <input name="vendor_name" value="{{ v.name }}">
+            <input type="hidden" name="vendor_gstin" value="{{ v.gstin }}">
+            <input type="hidden" name="vendor_invitation" value="{{ v.invitation_id }}">
+            <input type="hidden" name="vendor_partial" value="{{ '1' if v.partial else '0' }}">
+          </td>
+          <td><input class="num" name="vendor_basic" value="{{ v.basic }}"></td>
+          <td class="mid mono">{{ v.rank or '—' }}</td>
+          <td class="num mono">{{ v.total or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  {% if data.line_items %}
+  <section class="card">
+    <h2>Line items <span class="count">read from Ariba, not editable</span></h2>
+    <table class="items">
+      <thead>
+        <tr><th>Item ID</th><th>Item name</th><th>UOM</th><th>Qty</th>
+            <th>Last PO price</th><th>Vendor prices</th></tr>
+      </thead>
+      <tbody>
+        {% for item in data.line_items %}
+        <tr>
+          <td class="mono">{{ item.material_code or item.item_id }}</td>
+          <td>{{ item.title }}</td>
+          <td class="mid">{{ item.uom or '—' }}</td>
+          <td class="num mono">{{ item.quantity or '—' }}</td>
+          <td class="num mono">{{ item.last_po_price or '—' }}</td>
+          <td class="mono small">
+            {% for name, amount in item.prices.items() %}
+              {{ name }} {{ amount }}{% if not loop.last %} · {% endif %}
+            {% else %}—{% endfor %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <h2>Justification</h2>
+    <p class="hint">The only written section in the document.</p>
+    <textarea name="justification" rows="8">{{ data.justification }}</textarea>
+  </section>
+
+  <div class="actions sticky">
+    <a class="ghost button" href="{{ url_for('index') }}">Back</a>
+    <button class="primary" type="submit">Generate NFA</button>
+  </div>
+</form>
+
+{% endblock %}

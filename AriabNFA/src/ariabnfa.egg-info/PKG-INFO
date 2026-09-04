@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: ariabnfa
+Version: 0.1.0
+Summary: Generate NFA (Note For Approval) documents from SAP Ariba sourcing events
+Requires-Python: >=3.12

@@ -1,0 +1,220 @@
+/* Palette derived from the InfraBeat wordmark: #009AC6 blue, #EB1F29 red.
+   Both are used at brand strength for marks and borders, and darkened for text
+   and button fills where the brand values would not carry enough contrast. */
+
+:root {
+  --brand-blue: #009AC6;
+  --brand-red:  #EB1F29;
+
+  --blue:       #006C8A;   /* accessible on white: links, primary fill */
+  --blue-soft:  #E2F3F9;
+  --blue-line:  #9FD9EA;
+  --red:        #C0121B;   /* accessible on white: errors */
+  --red-soft:   #FDE8E9;
+  --red-line:   #F2A8AC;
+
+  --ground:     #FAFCFD;
+  --surface:    #FFFFFF;
+  --ink:        #12242C;
+  --ink-soft:   #445760;
+  /* Hint text is 12.5px body copy, so this has to clear 4.5:1 on white, not
+     the 3:1 a decorative grey would get away with. */
+  --ink-mute:   #5B6C75;
+  --rule:       #DCE7EC;
+
+  --on-fill:    #FFFFFF;   /* text on a blue or red fill */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --brand-blue: #22B3DA;
+    --brand-red:  #FF4A55;
+
+    --blue:       #57C6E6;
+    --blue-soft:  #102E3A;
+    --blue-line:  #1F5A6E;
+    --red:        #FF7A82;
+    --red-soft:   #341418;
+    --red-line:   #7A2A30;
+
+    --ground:     #0D171C;
+    --surface:    #142329;
+    --ink:        #E7F1F5;
+    --ink-soft:   #AEC0C8;
+    --ink-mute:   #7C8F98;
+    --rule:       #24373F;
+
+    --on-fill:    #08171D;
+  }
+}
+
+:root[data-theme="dark"] {
+  --brand-blue: #22B3DA;
+  --brand-red:  #FF4A55;
+  --blue:       #57C6E6;
+  --blue-soft:  #102E3A;
+  --blue-line:  #1F5A6E;
+  --red:        #FF7A82;
+  --red-soft:   #341418;
+  --red-line:   #7A2A30;
+  --ground:     #0D171C;
+  --surface:    #142329;
+  --ink:        #E7F1F5;
+  --ink-soft:   #AEC0C8;
+  --ink-mute:   #7C8F98;
+  --rule:       #24373F;
+  --on-fill:    #08171D;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: 15px/1.55 "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+/* ---------- header ---------- */
+
+.bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 12px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+  /* the wordmark's two colours, as a hairline */
+  box-shadow: inset 0 3px 0 0 var(--brand-blue),
+              inset 132px 3px 0 0 var(--brand-red);
+}
+.brand { font-weight: 600; color: var(--ink); text-decoration: none; letter-spacing: -.01em; }
+.brand .b1 { color: var(--brand-blue); }
+.brand .b2 { color: var(--brand-red); }
+.bar nav { display: flex; align-items: center; gap: 16px; }
+.bar a { color: var(--blue); }
+
+.status { font-size: 12.5px; padding: 3px 9px; border-radius: 3px; font-weight: 500; }
+.status.ok   { background: var(--blue-soft); color: var(--blue); }
+.status.warn { background: var(--red-soft);  color: var(--red); }
+
+main { max-width: 940px; margin: 0 auto; padding: 28px 24px 96px; }
+
+h1 { font-size: 1.7rem; margin: 0 0 6px; letter-spacing: -.015em; }
+h2 {
+  font-size: 1.05rem; margin: 0 0 10px;
+  padding-left: 10px; border-left: 3px solid var(--brand-blue);
+}
+h2 .count { font-weight: 400; font-size: 12px; color: var(--ink-mute); margin-left: 8px; }
+.lede { color: var(--ink-soft); margin: 0 0 20px; }
+.hint { color: var(--ink-mute); font-size: 12.5px; margin: 6px 0 0; }
+
+.card {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 4px; padding: 18px 20px; margin-bottom: 16px;
+}
+
+/* ---------- forms ---------- */
+
+.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.field label, .field > label { font-size: 12.5px; color: var(--ink-soft); font-weight: 500; }
+.row { display: flex; gap: 16px; flex-wrap: wrap; }
+.row > .field { flex: 1 1 220px; }
+
+input, select, textarea {
+  font: inherit; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 3px; padding: 7px 9px; width: 100%;
+}
+textarea { resize: vertical; }
+input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--brand-blue); outline-offset: 1px; border-color: transparent;
+}
+input[type=checkbox] { accent-color: var(--brand-blue); }
+.check { display: flex; align-items: center; gap: 8px; font-size: 13.5px; margin: 6px 0; }
+.check input { width: auto; }
+
+/* ---------- details grid ---------- */
+
+.grid { display: flex; flex-direction: column; gap: 6px; }
+.gridrow {
+  display: grid; grid-template-columns: 26px 230px 1fr;
+  gap: 10px; align-items: start; padding: 5px 6px 5px 3px;
+  border-radius: 3px; border-left: 3px solid transparent;
+}
+/* Needs input is informational, not an error - blue, so red stays meaningful. */
+.gridrow.missing { background: var(--blue-soft); border-left-color: var(--brand-blue); }
+.gridrow .key { font: 12px ui-monospace, Consolas, monospace; color: var(--ink-mute); padding-top: 8px; }
+.gridrow .name { font-size: 13px; color: var(--ink-soft); padding-top: 8px; }
+.auto {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--brand-red); font-style: normal; font-weight: 600; margin-left: 6px;
+}
+
+/* ---------- tables ---------- */
+
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left; font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--blue); font-weight: 600;
+  padding: 8px; border-bottom: 2px solid var(--blue-line);
+}
+td { padding: 5px 8px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+tbody tr:hover { background: var(--blue-soft); }
+td.mid { text-align: center; }
+td.num, .num { text-align: right; font-variant-numeric: tabular-nums; }
+td input { padding: 5px 7px; }
+td input[type=checkbox] { width: auto; }
+.mono, code { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
+.small { font-size: 11.5px; color: var(--ink-soft); }
+.items td { font-size: 13px; }
+
+/* ---------- buttons ---------- */
+
+.actions { display: flex; gap: 10px; align-items: center; margin-top: 16px; }
+.actions.sticky {
+  position: sticky; bottom: 0; background: var(--ground);
+  padding: 14px 0; border-top: 1px solid var(--rule); justify-content: flex-end;
+}
+button, .button {
+  font: inherit; padding: 8px 18px; border-radius: 3px; cursor: pointer;
+  border: 1px solid var(--rule); background: var(--surface); color: var(--ink);
+  text-decoration: none; display: inline-block;
+}
+button.primary, .primary.button {
+  background: var(--blue); border-color: var(--blue);
+  color: var(--on-fill); font-weight: 600;
+}
+button.ghost, .ghost.button { border-color: var(--blue-line); color: var(--blue); }
+button:hover, .button:hover { filter: brightness(1.08); }
+
+/* ---------- messages ---------- */
+
+.alert {
+  background: var(--red-soft); color: var(--red);
+  border: 1px solid var(--red-line); border-left: 3px solid var(--brand-red);
+  border-radius: 3px; padding: 11px 14px; margin-bottom: 18px; font-size: 13.5px;
+}
+.done {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  background: var(--blue-soft); border: 1px solid var(--blue-line);
+  border-left: 3px solid var(--brand-blue); color: var(--ink);
+  border-radius: 3px; padding: 13px 16px; margin-bottom: 18px;
+}
+.done .mono { color: var(--ink-soft); }
+.notes {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-left: 3px solid var(--brand-red);
+  border-radius: 3px; padding: 11px 15px; margin-bottom: 18px;
+}
+.notes p { margin: 0 0 5px; font-size: 13px; color: var(--ink-soft); }
+.notes p:last-child { margin-bottom: 0; }
+
+.foot {
+  max-width: 940px; margin: 0 auto; padding: 0 24px 32px;
+  font-size: 12.5px; color: var(--ink-mute);
+}
+
+@media (max-width: 700px) {
+  .bar { box-shadow: inset 0 3px 0 0 var(--brand-blue); }
+  .gridrow { grid-template-columns: 22px 1fr; }
+  .gridrow .name { grid-column: 2; padding-top: 0; }
+  .gridrow input, .gridrow textarea { grid-column: 2; }
+}
