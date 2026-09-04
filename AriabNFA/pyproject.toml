@@ -1,0 +1,19 @@
+[project]
+name = "ariabnfa"
+version = "0.1.0"
+description = "Generate NFA (Note For Approval) documents from SAP Ariba sourcing events"
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"ariabnfa.web" = ["templates/*.html", "static/*.css"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
