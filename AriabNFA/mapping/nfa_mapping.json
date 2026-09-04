@@ -1,0 +1,280 @@
+{
+  "version": 1,
+  "_readme": [
+    "This file maps Ariba JSON onto NFA fields. It is the ONE place to change",
+    "when your realm's field names turn out to be different - no Python edits.",
+    "",
+    "Each field lists candidate paths, tried IN ORDER; the first one that yields",
+    "a non-empty value wins. So you can APPEND a newly discovered path rather",
+    "than replacing a guess, and both realms keep working.",
+    "",
+    "Path grammar:  a.b   a[0].b   a[*].b",
+    "",
+    "The paths below are STARTING GUESSES. To find the real ones, run a dump",
+    "(the 'Dump raw JSON' button, or: dev.bat --dump YOUR_EVENT_ID), open the",
+    "generated *_paths.csv in Excel, and match on the sample values."
+  ],
+
+  "scalars": {
+    "order_type": {
+      "paths": ["event.eventTypeName", "event.eventType", "event.type",
+                "event.customFields.OrderType"],
+      "type": "text"
+    },
+    "user_department": {
+      "_note": "Mapped to the event's Department. Ariba returns it as a list shaped like commodities ({uniqueName, domain, name}); the singular forms below cover realms that return a single object instead. Multiple departments join with ', '.",
+      "paths": [
+        "event.departments[*].name",
+        "event.departments[*].uniqueName",
+        "event.department.name",
+        "event.department",
+        "event.customFields.UserDepartment",
+        "event.customFields.Department"
+      ],
+      "type": "text"
+    },
+    "equipment_area": {
+      "_note": "Mapped to the event's commodity. Multiple commodities join with ', '. Swap to commodities[*].uniqueName for the UNSPSC code instead of the name, or put regions[*].name first to use the site/location.",
+      "paths": [
+        "event.commodities[*].name",
+        "event.commodities[*].uniqueName",
+        "event.regions[*].name",
+        "event.customFields.EquipmentArea",
+        "event.customFields.Site",
+        "event.region"
+      ],
+      "type": "text"
+    },
+    "plant": {
+      "_note": "Ariba carries Plant as a term on each LINE ITEM (fieldId 'Plant', a MasterDataType whose value is {simpleValue}), not on the event header. The header row therefore reads it from the items; identical values across lines are collapsed to one, and genuinely different plants are listed together.",
+      "paths": [
+        "items.payload[*].terms[fieldId=Plant].value.simpleValue",
+        "items.payload[*].terms[fieldId=Plant].value",
+        "event.items[*].terms[fieldId=Plant].value.simpleValue",
+        "items[*].terms[fieldId=Plant].value.simpleValue",
+        "event.customFields.Plant"
+      ],
+      "type": "text"
+    },
+    "indentor": {
+      "paths": ["event.owner.name", "event.requester.name",
+                "event.customFields.Indentor", "event.owners[0].name", "event.ownerName"],
+      "type": "text"
+    },
+    "pr_number": {
+      "paths": ["event.customFields.PRNumber", "event.requisitionId", "event.parentProjectId", "event.internalId"],
+      "type": "text"
+    },
+    "approved_budget": {
+      "paths": ["event.customFields.ApprovedBudget", "event.baselineSpend.amount",
+                "event.baselineSpend"],
+      "type": "money"
+    },
+    "total_cost": {
+      "paths": ["award.totalAwardedValue.amount", "event.customFields.TotalCost"],
+      "type": "money"
+    },
+    "oem_status": {
+      "paths": ["event.customFields.OEMStatus"],
+      "type": "text"
+    },
+    "single_tender": {
+      "paths": ["event.customFields.SingleTender"],
+      "type": "text"
+    },
+    "limited_enquiry": {
+      "paths": ["event.customFields.LimitedEnquiry"],
+      "type": "multiline"
+    }
+  },
+
+  "event": {
+    "subject": {
+      "paths": ["event.title", "event.header.title", "event.name", "event.description"],
+      "type": "text"
+    },
+    "event_id": {
+      "paths": ["event.internalId", "event.id", "event.eventId"],
+      "type": "text"
+    },
+    "doc_date": {
+      "_note": "The date printed under the letterhead. Falls back to today.",
+      "paths": ["event.awardDate", "event.closeDate", "event.endDate"],
+      "type": "date"
+    }
+  },
+
+  "awarded_value": {
+    "_note": [
+      "The awarded total, from GET /events/{id}/awards. Fills 'Total Cost of",
+      "this NFA' and takes precedence over the figure derived from the ranked",
+      "L1 vendor, because it is what Ariba actually awarded.",
+      "",
+      "The Totals roll-up row is reached as item > terms > Total > moneyValue >",
+      "amount. Ariba names terms by both fieldId and title and wraps values",
+      "inconsistently, so several spellings are tried in order.",
+      "",
+      "VERIFY THESE PATHS: the realm this was written against had no awarded",
+      "event (awards returned an empty payload), so they are inferred from the",
+      "term shapes seen elsewhere in the same API. Dump an awarded event and",
+      "correct them from the paths CSV if needed.",
+      "",
+      "If more than one value resolves they are summed, and the document says so."
+    ],
+    "paths": [
+      "award.payload[*].items[*].terms[title=Total].value.moneyValue.amount",
+      "award.payload[*].items[*].terms[title=Total].moneyValue.amount",
+      "award.payload[*].items[*].terms[fieldId=TOTAL].value.moneyValue.amount",
+      "award.payload[*].items[*].terms[fieldId=TOTALCOST].value.moneyValue.amount",
+      "award.payload[*].items[*].terms[title=Total Cost].value.moneyValue.amount",
+      "award.payload[*].items[*].rollUpTerms[fieldId=TOTALCOST].value.moneyValue.amount",
+      "award.payload[*].totalAwardPrice.amount",
+      "award.payload[*].totalAwardPrice"
+    ],
+    "_scenario_note": [
+      "Used only when nothing has actually been awarded. Award scenarios are",
+      "MUTUALLY EXCLUSIVE alternatives - Best Bid, Best Savings and so on - so",
+      "these are never summed; one is picked and the document states that the",
+      "figure is a projection rather than an award."
+    ],
+    "scenario_paths": [
+      "scenarios.payload[systemTag=BEST_BID].totalAwardPrice.amount",
+      "scenarios.payload[0].totalAwardPrice.amount",
+      "scenarios.payload[*].totalAwardPrice.amount"
+    ],
+    "_scenario_all_note": "Every scenario total, so the alternatives can be named rather than quietly discarded.",
+    "scenario_all_paths": ["scenarios.payload[*].totalAwardPrice.amount"]
+  },
+
+  "line_items": {
+    "_note": [
+      "Priced lines of the event, used by the item-wise supplier price section.",
+      "GET /events/{id}/items returns every row including sections and headers;",
+      "only rows carrying a PRICE term are treated as priced line items."
+    ],
+    "root_paths": ["items.payload", "items", "event.items"],
+    "fields": {
+      "item_id": ["itemId", "id", "lineItemId"],
+      "title": ["title", "description", "name"],
+      "quantity": [
+        "terms[fieldId=QUANTITY].value.quantityValue.amount",
+        "quantity.amount", "quantity"
+      ],
+      "uom": [
+        "terms[fieldId=QUANTITY].value.quantityValue.unitOfMeasureCode",
+        "terms[fieldId=QUANTITY].value.quantityValue.unitOfMeasureName",
+        "unitOfMeasure", "uom"
+      ],
+      "material_code": [
+        "terms[fieldId=MaterialCode].value.simpleValue",
+        "terms[fieldId=MaterialCode].value",
+        "terms[title=Material Code].value.simpleValue",
+        "materialCode"
+      ],
+      "_last_po_price_note": "GITASHORTSTRINGIFZ000311 is this realm's internal id for the 'Last PO Price' field. Another realm will use a different id - match it by its title or by sample value in the paths CSV.",
+      "last_po_price": [
+        "terms[fieldId=GITASHORTSTRINGIFZ000311].value.simpleValue",
+        "terms[title=Last PO Price].value.simpleValue",
+        "terms[title=Last PO Price].value",
+        "lastPOPrice"
+      ],
+      "_total_price_note": "Asked for as 'Total Value'; the field this realm actually exposes is TOTALCOST, titled 'Total Cost'. Both spellings are tried.",
+      "total_price": [
+        "terms[fieldId=TOTALCOST].value.moneyValue.amount",
+        "terms[title=Total Value].value.moneyValue.amount",
+        "terms[fieldId=TOTALVALUE].value.moneyValue.amount",
+        "terms[title=Total Cost].value.moneyValue.amount"
+      ]
+    },
+    "price_term_ids": ["PRICE", "EXTENDEDPRICE"]
+  },
+
+  "supplier_bids": {
+    "_note": [
+      "Per-supplier, per-line pricing from GET /events/{id}/supplierBids.",
+      "Confirmed against Doc89045043: one entry per bidder per item, each",
+      "carrying item.terms with PRICE, QUANTITY and EXTENDEDPRICE.",
+      "",
+      "A bid names its bidder only by 'invitationId' (an email-like id), never",
+      "by company name, so 'vendor' below resolves to that id and is then joined",
+      "back to event.supplierInvitations to get the organisation name.",
+      "",
+      "Each bidder also has a 'Totals' roll-up entry. It is ignored because its",
+      "itemId matches no line item - counting it would double every total."
+    ],
+    "root_paths": [
+      "supplierBids.payload",
+      "supplierBids",
+      "scenarios.payload[*].supplierBids",
+      "award.payload[*].supplierBids",
+      "award.bids"
+    ],
+    "fields": {
+      "vendor": [
+        "invitationId",
+        "supplier.name", "supplierName", "organization.name",
+        "supplier.organization.name", "participantName", "vendorName"
+      ],
+      "item_id": ["itemId", "item.itemId", "lineItemId", "id"],
+      "unit_price": [
+        "item.terms[fieldId=PRICE].value.moneyValue.amount",
+        "terms[fieldId=PRICE].value.moneyValue.amount",
+        "price.amount", "unitPrice.amount", "price"
+      ],
+      "extended_price": [
+        "item.terms[fieldId=EXTENDEDPRICE].value.moneyValue.amount",
+        "terms[fieldId=EXTENDEDPRICE].value.moneyValue.amount",
+        "extendedPrice.amount", "extendedPrice", "totalPrice.amount"
+      ],
+      "line_bids": ["itemBids", "lineItems", "bids"]
+    }
+  },
+
+  "vendors": {
+    "_note": [
+      "root_paths is tried in order until one yields a list. Each element is one",
+      "vendor. If your realm returns one row PER LINE ITEM per vendor, that is",
+      "fine - rows are grouped by vendor name and their amounts summed."
+    ],
+    "root_paths": [
+      "award.bids",
+      "event.bids",
+      "event.responses",
+      "event.supplierInvitations",
+      "event.suppliers",
+      "reporting.rows"
+    ],
+    "fields": {
+      "name": ["organization.name", "supplierName", "supplier.name",
+               "mainContact.orgName", "vendorName", "name"],
+      "basic": [
+        "terms[fieldId=PRICE].value.moneyValue.amount",
+        "terms[fieldId=PRICE].value.amount",
+        "items[*].terms[fieldId=PRICE].value.moneyValue.amount",
+        "basicPrice", "netPrice.amount", "priceExcludingTax"
+      ],
+      "total": [
+        "terms[fieldId=EXTENDEDPRICE].value.moneyValue.amount",
+        "terms[fieldId=TOTALCOST].value.moneyValue.amount",
+        "items[*].terms[fieldId=EXTENDEDPRICE].value.moneyValue.amount",
+        "extendedPrice.amount", "totalPrice.amount", "totalPrice", "quotedValue", "unitPrice.amount", "price"
+      ],
+      "gst": ["taxAmount.amount", "gstAmount", "taxAmount"],
+      "gstin": ["organization.taxID", "supplier.taxId", "taxId", "gstin", "supplier.gstin"],
+      "_invitation_id_note": "How supplierBids refers to this vendor; the join key between a bid and a company name.",
+      "invitation_id": ["invitationId", "userId", "mainContact.uniqueName"],
+      "responded": ["hasResponded", "participationStatus", "invitationStatus", "responseStatus", "status"],
+      "line_id": ["itemId", "lineItemId", "itemName"]
+    },
+    "responded_values": [
+      "true", "yes", "y", "1",
+      "responded", "submitted", "offer submitted", "participating", "participated",
+      "accepted", "bid submitted", "complete", "submittedresponse"
+    ],
+    "not_responded_values": [
+      "false", "no", "n", "0",
+      "notresponded", "not responded", "no response", "declined", "invited",
+      "pending", "not submitted", "offer not submitted", "nobid", "no bid"
+    ]
+  }
+}
